@@ -10,8 +10,8 @@ export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const [authMode, setAuthMode] = useState('login'); // login, signup
-  const [step, setStep] = useState('credentials'); // credentials, otp
+  const [authMode, setAuthMode] = useState('login');
+  const [step, setStep] = useState('credentials');
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -33,13 +33,15 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const res = await fetch('${import.meta.env.VITE_API_URL}/api/auth/send-otp', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, name, role, action: authMode })
       });
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to trigger OTP');
+
       setStep('otp');
     } catch (err) {
       alert(err.message);
@@ -55,15 +57,22 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const res = await fetch('${import.meta.env.VITE_API_URL}/api/auth/verify-otp', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp: otpValue })
       });
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Invalid OTP');
 
-      login({ email, role, name: data.user.name, token: data.token });
+      login({
+        email,
+        role,
+        name: data.user?.name || 'User',
+        token: data.token
+      });
+
       navigate(`/dashboard/${role}`);
     } catch (err) {
       alert(err.message);
@@ -87,10 +96,7 @@ export default function Login() {
         className="glass max-w-md w-full p-8 rounded-3xl"
       >
         <div className="text-center mb-6">
-          <ShieldCheck className={`w-12 h-12 mx-auto mb-4 ${role === 'admin' ? 'text-brand-darkGreen' :
-            role === 'donor' ? 'text-rose-500' :
-              role === 'acceptor' ? 'text-brand-orange' : 'text-blue-500'
-            }`} />
+          <ShieldCheck className="w-12 h-12 mx-auto mb-4 text-brand-green" />
           <h2 className="text-2xl font-black text-gray-900 tracking-tight">{roleDisplay}</h2>
           <p className="text-gray-500 text-sm mt-2">Secure access restricted to authorized personnel.</p>
         </div>
@@ -106,20 +112,20 @@ export default function Login() {
               className="space-y-4"
             >
               {authMode === 'signup' && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mb-4">
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                       type="text"
-                      required={authMode === 'signup'}
+                      required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-green outline-none bg-white/50"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl"
                       placeholder="Organization Name"
                     />
                   </div>
-                </motion.div>
+                </div>
               )}
 
               <div>
@@ -131,7 +137,7 @@ export default function Login() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-green outline-none bg-white/50"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl"
                     placeholder="name@organization.org"
                   />
                 </div>
@@ -146,7 +152,7 @@ export default function Login() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-green outline-none bg-white/50"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl"
                     placeholder="••••••••"
                   />
                 </div>
@@ -156,45 +162,11 @@ export default function Login() {
 
               <button
                 type="submit"
-                disabled={loading || !captchaVerified || !email || !password || (authMode === 'signup' && !name)}
-                className="w-full py-3 bg-brand-green text-white font-bold rounded-xl hover:bg-brand-darkGreen transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-md"
+                disabled={loading}
+                className="w-full py-3 bg-brand-green text-white font-bold rounded-xl"
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : (authMode === 'login' ? 'Secure Log In / Send OTP' : 'Create Account / Send OTP')}
+                {loading ? 'Loading...' : 'Send OTP'}
               </button>
-
-              {authMode === 'login' && (
-                <div className="flex justify-between items-center px-1 pt-2">
-                  <button type="button" onClick={() => alert('Password Recovery instructions have been securely triggered and sent to your email.')} className="text-sm font-semibold text-brand-green hover:underline">
-                    Forgot Password?
-                  </button>
-                </div>
-              )}
-
-              <div className="pt-6 mt-6 border-t border-gray-100 flex flex-col items-center">
-                {authMode === 'login' ? (
-                  <>
-                    <p className="text-sm text-gray-500 mb-3">Don't have an enterprise account yet?</p>
-                    <button
-                      type="button"
-                      onClick={() => setAuthMode('signup')}
-                      className="w-full py-3 bg-white text-gray-900 border border-gray-200 font-bold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm"
-                    >
-                      Create New Account
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-sm text-gray-500 mb-3">Already have an active account?</p>
-                    <button
-                      type="button"
-                      onClick={() => setAuthMode('login')}
-                      className="w-full py-3 bg-white text-gray-900 border border-gray-200 font-bold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm"
-                    >
-                      Sign In to Portal
-                    </button>
-                  </>
-                )}
-              </div>
             </motion.form>
           ) : (
             <motion.form
@@ -207,38 +179,35 @@ export default function Login() {
             >
               <div className="text-center">
                 <MailCheck className="w-12 h-12 text-brand-green mx-auto mb-3" />
-                <p className="text-sm text-gray-600 mb-4">We've securely delivered a 6-digit code to <br /><strong className="text-gray-900">{email}</strong></p>
-                <div className="flex justify-center gap-2">
-                  {[0, 1, 2, 3, 4, 5].map((index) => (
-                    <input
-                      key={index}
-                      type="text"
-                      maxLength={1}
-                      className="w-12 h-14 text-center text-xl font-bold border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green outline-none bg-white flex-1 max-w-[48px]"
-                      value={otp[index]}
-                      onChange={(e) => {
-                        const newOtp = [...otp];
-                        newOtp[index] = e.target.value;
-                        setOtp(newOtp);
-                        if (e.target.value && e.target.nextSibling) {
-                          e.target.nextSibling.focus();
-                        }
-                      }}
-                    />
-                  ))}
-                </div>
+                <p className="text-sm text-gray-600 mb-4">
+                  Enter the 6-digit OTP sent to <strong>{email}</strong>
+                </p>
+              </div>
+
+              <div className="flex justify-center gap-2">
+                {otp.map((digit, index) => (
+                  <input
+                    key={index}
+                    type="text"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => {
+                      const newOtp = [...otp];
+                      newOtp[index] = e.target.value;
+                      setOtp(newOtp);
+                    }}
+                    className="w-12 h-14 text-center text-xl font-bold border border-gray-300 rounded-lg"
+                  />
+                ))}
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-brand-green text-white font-bold rounded-xl hover:bg-brand-darkGreen transition-all flex items-center justify-center shadow-md"
+                className="w-full py-3 bg-brand-green text-white font-bold rounded-xl"
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : 'Verify & Enter Portal'}
+                {loading ? 'Verifying...' : 'Verify & Enter Portal'}
               </button>
-              <p className="text-center text-sm text-brand-green font-medium cursor-pointer hover:text-brand-darkGreen transition-colors" onClick={() => setStep('credentials')}>
-                Wait, I entered the wrong email address
-              </p>
             </motion.form>
           )}
         </AnimatePresence>
