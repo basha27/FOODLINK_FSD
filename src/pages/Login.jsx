@@ -12,7 +12,7 @@ export default function Login() {
 
   const [authMode, setAuthMode] = useState('login'); // login, signup
   const [step, setStep] = useState('credentials'); // credentials, otp
-  
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,10 +30,10 @@ export default function Login() {
     e.preventDefault();
     if (!captchaVerified) return alert('Please complete the CAPTCHA first.');
     if (authMode === 'signup' && !name) return alert('Please enter a display name.');
-    
+
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/send-otp', {
+      const res = await fetch('${import.meta.env.VITE_API_URL}/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, name, role, action: authMode })
@@ -52,17 +52,17 @@ export default function Login() {
     e.preventDefault();
     const otpValue = otp.join('');
     if (otpValue.length !== 6) return alert('Please enter full OTP.');
-    
+
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/verify-otp', {
+      const res = await fetch('${import.meta.env.VITE_API_URL}/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp: otpValue })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Invalid OTP');
-      
+
       login({ email, role, name: data.user.name, token: data.token });
       navigate(`/dashboard/${role}`);
     } catch (err) {
@@ -74,36 +74,35 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <button 
+      <button
         onClick={() => navigate('/')}
         className="absolute top-8 left-8 flex items-center text-gray-500 hover:text-brand-darkGreen transition-colors"
       >
-        <ArrowLeft className="w-5 h-5 mr-2"/> Back Home
+        <ArrowLeft className="w-5 h-5 mr-2" /> Back Home
       </button>
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="glass max-w-md w-full p-8 rounded-3xl"
       >
         <div className="text-center mb-6">
-          <ShieldCheck className={`w-12 h-12 mx-auto mb-4 ${
-            role === 'admin' ? 'text-brand-darkGreen' : 
-            role === 'donor' ? 'text-rose-500' : 
-            role === 'acceptor' ? 'text-brand-orange' : 'text-blue-500'
-          }`} />
+          <ShieldCheck className={`w-12 h-12 mx-auto mb-4 ${role === 'admin' ? 'text-brand-darkGreen' :
+            role === 'donor' ? 'text-rose-500' :
+              role === 'acceptor' ? 'text-brand-orange' : 'text-blue-500'
+            }`} />
           <h2 className="text-2xl font-black text-gray-900 tracking-tight">{roleDisplay}</h2>
           <p className="text-gray-500 text-sm mt-2">Secure access restricted to authorized personnel.</p>
         </div>
 
         <AnimatePresence mode="wait">
           {step === 'credentials' ? (
-            <motion.form 
+            <motion.form
               key="credentials"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
-              onSubmit={handleSendOTP} 
+              onSubmit={handleSendOTP}
               className="space-y-4"
             >
               {authMode === 'signup' && (
@@ -111,8 +110,8 @@ export default function Login() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       required={authMode === 'signup'}
                       value={name}
                       onChange={(e) => setName(e.target.value)}
@@ -127,8 +126,8 @@ export default function Login() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input 
-                    type="email" 
+                  <input
+                    type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -137,13 +136,13 @@ export default function Login() {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input 
-                    type="password" 
+                  <input
+                    type="password"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -155,7 +154,7 @@ export default function Login() {
 
               <CaptchaBlock onVerify={setCaptchaVerified} />
 
-              <button 
+              <button
                 type="submit"
                 disabled={loading || !captchaVerified || !email || !password || (authMode === 'signup' && !name)}
                 className="w-full py-3 bg-brand-green text-white font-bold rounded-xl hover:bg-brand-darkGreen transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-md"
@@ -175,8 +174,8 @@ export default function Login() {
                 {authMode === 'login' ? (
                   <>
                     <p className="text-sm text-gray-500 mb-3">Don't have an enterprise account yet?</p>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={() => setAuthMode('signup')}
                       className="w-full py-3 bg-white text-gray-900 border border-gray-200 font-bold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm"
                     >
@@ -186,8 +185,8 @@ export default function Login() {
                 ) : (
                   <>
                     <p className="text-sm text-gray-500 mb-3">Already have an active account?</p>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={() => setAuthMode('login')}
                       className="w-full py-3 bg-white text-gray-900 border border-gray-200 font-bold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm"
                     >
@@ -198,17 +197,17 @@ export default function Login() {
               </div>
             </motion.form>
           ) : (
-            <motion.form 
+            <motion.form
               key="otp"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              onSubmit={handleVerifyOTP} 
+              onSubmit={handleVerifyOTP}
               className="space-y-6"
             >
               <div className="text-center">
                 <MailCheck className="w-12 h-12 text-brand-green mx-auto mb-3" />
-                <p className="text-sm text-gray-600 mb-4">We've securely delivered a 6-digit code to <br/><strong className="text-gray-900">{email}</strong></p>
+                <p className="text-sm text-gray-600 mb-4">We've securely delivered a 6-digit code to <br /><strong className="text-gray-900">{email}</strong></p>
                 <div className="flex justify-center gap-2">
                   {[0, 1, 2, 3, 4, 5].map((index) => (
                     <input
@@ -230,7 +229,7 @@ export default function Login() {
                 </div>
               </div>
 
-              <button 
+              <button
                 type="submit"
                 disabled={loading}
                 className="w-full py-3 bg-brand-green text-white font-bold rounded-xl hover:bg-brand-darkGreen transition-all flex items-center justify-center shadow-md"
