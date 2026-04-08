@@ -33,7 +33,7 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/verify-otp`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, name, role, action: authMode })
@@ -55,7 +55,7 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const res = await fetch(``${ import.meta.env.VITE_API_URL } / api / auth / verify - otp`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp: otpValue })
@@ -64,7 +64,7 @@ export default function Login() {
       if (!res.ok) throw new Error(data.error || 'Invalid OTP');
 
       login({ email, role, name: data.user.name, token: data.token });
-      navigate(`/ dashboard / ${ role }`);
+      navigate(`/dashboard/${role}`);
     } catch (err) {
       alert(err.message);
     } finally {
@@ -87,9 +87,9 @@ export default function Login() {
         className="glass max-w-md w-full p-8 rounded-3xl"
       >
         <div className="text-center mb-6">
-          <ShieldCheck className={`w - 12 h - 12 mx - auto mb - 4 ${ role === 'admin' ? 'text-brand-darkGreen' :
-        role === 'donor' ? 'text-rose-500' :
-          role === 'acceptor' ? 'text-brand-orange' : 'text-blue-500'
+          <ShieldCheck className={`w-12 h-12 mx-auto mb-4 ${role === 'admin' ? 'text-brand-darkGreen' :
+            role === 'donor' ? 'text-rose-500' :
+              role === 'acceptor' ? 'text-brand-orange' : 'text-blue-500'
             }`} />
           <h2 className="text-2xl font-black text-gray-900 tracking-tight">{roleDisplay}</h2>
           <p className="text-gray-500 text-sm mt-2">Secure access restricted to authorized personnel.</p>
