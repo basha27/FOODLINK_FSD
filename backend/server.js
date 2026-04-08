@@ -8,7 +8,25 @@ import path from 'path';
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// CORS: allow Vercel frontend + localhost dev
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:4173',
+  process.env.FRONTEND_URL  // Set this in Render env vars to your Vercel URL
+].filter(Boolean);
+
+app.use(cors({
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.some(allowed => origin.startsWith(allowed)) || origin.endsWith('.vercel.app')) {
+      return callback(null, true);
+    }
+    return callback(null, true); // permissive for now; tighten later
+  },
+  credentials: true
+}));
 app.use(express.json());
 
 // In-Memory DB for OTPs and Registered Users
@@ -110,8 +128,13 @@ app.post('/api/auth/verify-otp', (req, res) => {
   return res.status(400).json({ error: 'Invalid OTP' });
 });
 
+// Health check endpoint for Render
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`========================================`);
   console.log(`✅ Food Link Backend listening on port ${PORT}`);
   console.log(`✉️ Email Service Active via Nodemailer`);
