@@ -29,6 +29,11 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({ message: '🍽️ Food Link API is running', status: 'ok' });
+});
+
 // In-Memory DB for OTPs and Registered Users
 const otpStorage = new Map();
 const registeredUsers = new Map();
