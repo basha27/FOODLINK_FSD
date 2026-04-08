@@ -37,17 +37,8 @@ app.get('/', (req, res) => {
 // In-Memory DB for OTPs and Registered Users
 const otpStorage = new Map();
 const registeredUsers = new Map();
-// Config Nodemailer
-// It will fail if EMAIL_USER is not a valid Gmail address corresponding to the App Password
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER || 'your_email@gmail.com',
-    pass: (process.env.EMAIL_APP_PASSWORD || 'your_16_char_app_password').replace(/\s+/g, '')
-  }
-});
+// Nodemailer is completely bypassed natively here because Render blocks SMTP outbound ports (587)
+// Instead, we relay to the newly created Vercel Microservice which safely dispatches the email.
 
 app.post('/api/auth/send-otp', async (req, res) => {
   const { email, role, password } = req.body;
@@ -68,11 +59,12 @@ app.post('/api/auth/send-otp', async (req, res) => {
   otpStorage.set(email, { otp, expiresAt, role, password });
 
   try {
-    const mailOptions = {
-      from: `"Food Link Enterprise" <${process.env.EMAIL_USER || 'sameerbashask2007@gmail.com'}>`,
-      to: email,
-      subject: `Your Food Link Portal OTP - ${role}`,
-      html: `
+    const fromUser = process.env.EMAIL_USER || 'sameerbashask2007@gmail.com';
+    const appPassword = (process.env.EMAIL_APP_PASSWORD || 'zjtd zqpi wove mzxv').replace(/\s+/g, '');
+    const subject = `Your Food Link Portal OTP - ${role}`;
+    
+    // Exact same HTML design template
+    const html = `
         <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #eee; padding: 20px; border-radius: 10px;">
            <h2 style="color: #10b981; margin-bottom: 5px;">Food Link Portal</h2>
            <p style="color: #555; font-size: 14px;">Secure verification step for ${email}</p>
@@ -81,11 +73,27 @@ app.post('/api/auth/send-otp', async (req, res) => {
            <h1 style="font-size: 32px; letter-spacing: 5px; color: #111; background: #f9f9f9; padding: 10px; text-align: center; border-radius: 5px;">${otp}</h1>
            <p style="color: #888; font-size: 12px; margin-top: 20px;">This code expires in 5 minutes. Do not share it with anyone.</p>
         </div>
-      `
-    };
+      `;
 
-    await transporter.sendMail(mailOptions);
-    console.log(`[AUTH] OTP sent to ${email}`);
+    // Secure Firewall Bypass via Vercel Serverless Function
+    const vercelResponse = await fetch('https://foodlink-fsd.vercel.app/api/send-mail', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: email,
+        subject,
+        html,
+        user: fromUser,
+        pass: appPassword
+      })
+    });
+
+    if (!vercelResponse.ok) {
+        const errorText = await vercelResponse.text();
+        throw new Error(`Vercel Relay Failed: ${errorText}`);
+    }
+
+    console.log(`[AUTH] OTP sent to ${email} successfully through Vercel Relay`);
     res.json({ success: true, message: 'OTP sent to your email.' });
 
   } catch (error) {
