@@ -2,12 +2,18 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { MapPin, Clock, Camera, FileText, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useData } from '../../context/DataContext';
 
 export default function DonorDashboard() {
   const location = useLocation();
   const navigate = useNavigate();
   const isAddForm = location.pathname.includes('/add');
   const [foodPhoto, setFoodPhoto] = useState(null);
+  const { donations, addDonation } = useData();
+  const [foodDesc, setFoodDesc] = useState('');
+  const [qty, setQty] = useState('');
+  const [pickup, setPickup] = useState('');
+  const [windowTime, setWindowTime] = useState('');
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -46,11 +52,7 @@ export default function DonorDashboard() {
           <div className="glass p-8 rounded-3xl">
             <h3 className="text-xl font-bold mb-6 text-gray-900">Recent Donations</h3>
             <div className="space-y-4">
-              {[
-                { date: 'Today, 2:30 PM', item: 'Wedding Buffet Leftovers', qty: '45 kg', status: 'Picked Up', to: 'Grace Orphanage' },
-                { date: 'Oct 12, 11:00 AM', item: 'Conference Lunch Boxes', qty: '120 boxes', status: 'Completed', to: 'Downtown Shelter' },
-                { date: 'Sep 28, 9:00 PM', item: 'Bakery Surplus', qty: '15 kg', status: 'Completed', to: 'Senior Care Center' },
-              ].map((d, i) => (
+              {donations.filter(d => !d.status.includes('Review')).map((d, i) => (
                 <div key={i} className="flex justify-between items-center p-5 border border-gray-100 rounded-2xl hover:shadow-md transition-all bg-white/40">
                   <div>
                     <h5 className="font-bold text-gray-900 text-lg">{d.item}</h5>
@@ -77,24 +79,24 @@ export default function DonorDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Food Description</label>
-                <input type="text" className="w-full p-3 border border-gray-200 rounded-xl" placeholder="e.g. Mixed Buffet, Veg & Non-Veg..." />
+                <input value={foodDesc} onChange={e => setFoodDesc(e.target.value)} type="text" className="w-full p-3 border border-gray-200 rounded-xl" placeholder="e.g. Mixed Buffet, Veg & Non-Veg..." />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Quantity (kg or servings)</label>
-                <input type="text" className="w-full p-3 border border-gray-200 rounded-xl" placeholder="e.g. 50 servings" />
+                <input value={qty} onChange={e => setQty(e.target.value)} type="text" className="w-full p-3 border border-gray-200 rounded-xl" placeholder="e.g. 50 servings" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Pickup Address</label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5"/>
-                  <input type="text" className="w-full pl-10 p-3 border border-gray-200 rounded-xl" placeholder="Event hall block C..." />
+                  <input value={pickup} onChange={e => setPickup(e.target.value)} type="text" className="w-full pl-10 p-3 border border-gray-200 rounded-xl" placeholder="Event hall block C..." />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Available Pickup Window</label>
                 <div className="relative">
                   <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5"/>
-                  <input type="text" className="w-full pl-10 p-3 border border-gray-200 rounded-xl" placeholder="e.g. 2:00 PM - 5:00 PM today" />
+                  <input value={windowTime} onChange={e => setWindowTime(e.target.value)} type="text" className="w-full pl-10 p-3 border border-gray-200 rounded-xl" placeholder="e.g. 2:00 PM - 5:00 PM today" />
                 </div>
               </div>
             </div>
@@ -132,7 +134,14 @@ export default function DonorDashboard() {
               <textarea className="w-full p-3 border border-gray-200 rounded-xl h-24" placeholder="Prepared 1 hour ago. Safe for consumption for next 6 hours..."></textarea>
             </div>
 
-            <button type="button" onClick={() => { alert('Donation safely submitted to the Global Waitlist for Analyst review!'); setFoodPhoto(null); navigate('/dashboard/donor'); }} className="w-full py-4 bg-brand-green text-white font-bold text-lg rounded-xl hover:bg-brand-darkGreen transition-colors flex justify-center items-center">
+            <button type="button" onClick={() => { 
+                if(!foodDesc || !qty || !pickup) return alert('Please fill in description, quantity, and pickup address!');
+                addDonation({ item: foodDesc, qty, location: pickup, status: 'Pending Auto-Match', to: 'Analyzing...' });
+                alert('Donation safely submitted to the Global Waitlist for Analyst review!'); 
+                setFoodPhoto(null); 
+                navigate('/dashboard/donor'); 
+                }} 
+              className="w-full py-4 bg-brand-green text-white font-bold text-lg rounded-xl hover:bg-brand-darkGreen transition-colors flex justify-center items-center">
               Submit Donation Request
             </button>
           </form>

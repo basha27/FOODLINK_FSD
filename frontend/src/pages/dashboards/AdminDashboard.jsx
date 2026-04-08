@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp, Users, Package, AlertCircle, Settings, User } from 'lucide-react';
+import { useData } from '../../context/DataContext';
 const data = [
   { name: 'Mon', donations: 400, matches: 240 },
   { name: 'Tue', donations: 300, matches: 139 },
@@ -95,31 +96,26 @@ export default function AdminDashboard() {
 }
 
 const UsersPanel = () => {
-  const [users, setUsers] = useState([
-    { name: 'Hope Shelter', role: 'Acceptor', status: 'Active' },
-    { name: 'Star Banquet Hall', role: 'Donor', status: 'Active' },
-    { name: 'Data Analyst User_41', role: 'Analyst', status: 'Offline' },
-    { name: 'Downtown Orphanage', role: 'Acceptor', status: 'Pending Review' }
-  ]);
+  const { users, addUser, editUser, suspendUser } = useData();
 
   const handleInvite = () => {
     const donorCount = users.filter(u => u.role === 'Donor').length;
     const newName = prompt(`Currently there are ${donorCount} donors.\n\nEnter new organization name to invite:`);
     if (newName) {
-      setUsers([...users, { name: newName, role: 'Donor', status: 'Pending Review' }]);
+      addUser({ name: newName, role: 'Donor', status: 'Pending Review' });
     }
   };
 
   const handleEdit = (userToEdit) => {
     const newName = prompt('Edit Organization Name:', userToEdit.name);
     if (newName) {
-      setUsers(users.map(u => u.name === userToEdit.name ? { ...u, name: newName } : u));
+      editUser(userToEdit.name, newName);
     }
   };
 
   const handleSuspend = (userToSuspend) => {
     if (confirm(`Are you sure you want to suspend ${userToSuspend.name}?`)) {
-      setUsers(users.map(u => u.name === userToSuspend.name ? { ...u, status: 'Suspended' } : u));
+      suspendUser(userToSuspend.name);
     }
   };
 

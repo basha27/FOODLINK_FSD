@@ -1,7 +1,8 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { BrainCircuit, Activity, Database, AlertCircle, MapPin } from 'lucide-react';
+import { BrainCircuit, Activity, Database, AlertCircle, MapPin, User, Package } from 'lucide-react';
+import { useData } from '../../context/DataContext';
 
 const matchData = [
   { region: 'North', demand: 120, supply: 90 },
@@ -11,8 +12,9 @@ const matchData = [
 ];
 
 export default function AnalystDashboard() {
+  const { users, donations } = useData();
   const location = useLocation();
-  if (location.pathname.includes('/maps')) return <HeatmapPanel />;
+  if (location.pathname.includes('/maps')) return <HeatmapPanel users={users} donations={donations} />;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -90,10 +92,62 @@ export default function AnalystDashboard() {
   );
 }
 
-const HeatmapPanel = () => (
-  <div className="glass p-8 rounded-3xl min-h-[500px] flex flex-col items-center justify-center text-center">
-    <MapPin className="w-16 h-16 text-brand-orange mb-4 opacity-50" />
-    <h3 className="text-2xl font-black text-gray-900 mb-2">Global Intel Heatmaps</h3>
-    <p className="text-gray-500 max-w-md mx-auto">This geographical module integrates with Mapbox APIs to geographically pinpoint real-time surplus pipelines versus hunger hot-spots dynamically.</p>
+const HeatmapPanel = ({ users, donations }) => (
+  <div className="glass p-8 rounded-3xl min-h-[500px]">
+    <div className="mb-6">
+      <h3 className="text-2xl font-black text-gray-900 flex items-center"><MapPin className="w-8 h-8 text-brand-orange mr-3" /> Live Operations Map</h3>
+      <p className="text-gray-500">Real-time geospatial plotting of active NGOs and impending food surplus queues.</p>
+    </div>
+    
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* Fake Map Graphic */}
+      <div className="bg-blue-50/50 rounded-2xl border-2 border-blue-100/50 overflow-hidden relative min-h-[400px] flex items-center justify-center">
+        {/* Abstract Map Grid Lines */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'linear-gradient(#60a5fa 1px, transparent 1px), linear-gradient(90deg, #60a5fa 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
+        
+        {users.slice(0, 3).map((u, i) => (
+           <div key={`u-${i}`} className={`absolute p-2 bg-white rounded-full shadow-lg border-2 ${u.role === 'Donor' ? 'border-brand-green' : 'border-blue-500'} animate-bounce`} style={{ top: `${20 + i*20}%`, left: `${30 + i*15}%` }}>
+              <User className={`w-4 h-4 ${u.role === 'Donor' ? 'text-brand-green' : 'text-blue-500'}`} />
+              <div className="absolute top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] font-bold px-2 py-1 rounded whitespace-nowrap opacity-0 hover:opacity-100 transition-opacity z-10">{u.name}</div>
+           </div>
+        ))}
+
+        {donations.filter(d => d.status.includes('Pending')).slice(0, 3).map((d, i) => (
+           <div key={`d-${i}`} className="absolute p-2 bg-brand-orange text-white rounded-full shadow-xl border-2 border-white animate-pulse" style={{ top: `${60 - i*15}%`, left: `${50 + i*15}%` }}>
+              <Package className="w-4 h-4" />
+              <div className="absolute top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] font-bold px-2 py-1 rounded whitespace-nowrap opacity-100 z-10">{d.qty} of {d.item}</div>
+           </div>
+        ))}
+      </div>
+
+      <div className="space-y-6">
+         <div className="bg-white/60 p-5 rounded-2xl border border-gray-100 h-1/2 overflow-y-auto">
+            <h4 className="font-bold text-gray-900 mb-3 flex items-center"><User className="w-4 h-4 text-brand-green mr-2"/> Newly Registered Intel</h4>
+            <div className="space-y-2">
+              {users.map((u, i) => (
+                <div key={i} className="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-100 text-sm">
+                  <span className="font-semibold text-gray-800">{u.name}</span>
+                  <span className="text-gray-500 text-xs px-2 py-1 bg-gray-50 rounded-md">{u.role}</span>
+                </div>
+              ))}
+            </div>
+         </div>
+         
+         <div className="bg-white/60 p-5 rounded-2xl border border-gray-100 h-1/2 overflow-y-auto">
+            <h4 className="font-bold text-gray-900 mb-3 flex items-center"><Package className="w-4 h-4 text-brand-orange mr-2"/> Active Surplus Drops</h4>
+            <div className="space-y-2">
+              {donations.filter(d => !d.status.includes('Completed')).map((d, i) => (
+                <div key={i} className="bg-white p-3 rounded-xl border border-gray-100 text-sm">
+                  <div className="flex justify-between font-semibold text-gray-800 mb-1">
+                    <span>{d.item}</span>
+                    <span className="text-brand-orange">{d.qty}</span>
+                  </div>
+                  <p className="text-gray-500 text-xs"><MapPin className="inline w-3 h-3"/> Location: {d.location}</p>
+                </div>
+              ))}
+            </div>
+         </div>
+      </div>
+    </div>
   </div>
 );
