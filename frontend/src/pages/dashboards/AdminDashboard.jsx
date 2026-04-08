@@ -94,57 +94,86 @@ export default function AdminDashboard() {
   );
 }
 
-const UsersPanel = () => (
-  <div className="glass p-8 rounded-3xl min-h-[500px]">
-    <div className="flex justify-between items-center mb-8 border-b border-gray-100 pb-6">
-      <div>
-         <h2 className="text-2xl font-black text-gray-900 flex items-center"><User className="w-6 h-6 mr-3 text-brand-green" /> Users & NGOs Directory</h2>
-         <p className="text-gray-500 text-sm mt-1">Manage global access control across all operational roles.</p>
+const UsersPanel = () => {
+  const [users, setUsers] = useState([
+    { name: 'Hope Shelter', role: 'Acceptor', status: 'Active' },
+    { name: 'Star Banquet Hall', role: 'Donor', status: 'Active' },
+    { name: 'Data Analyst User_41', role: 'Analyst', status: 'Offline' },
+    { name: 'Downtown Orphanage', role: 'Acceptor', status: 'Pending Review' }
+  ]);
+
+  const handleInvite = () => {
+    const donorCount = users.filter(u => u.role === 'Donor').length;
+    const newName = prompt(`Currently there are ${donorCount} donors.\n\nEnter new organization name to invite:`);
+    if (newName) {
+      setUsers([...users, { name: newName, role: 'Donor', status: 'Pending Review' }]);
+    }
+  };
+
+  const handleEdit = (userToEdit) => {
+    const newName = prompt('Edit Organization Name:', userToEdit.name);
+    if (newName) {
+      setUsers(users.map(u => u.name === userToEdit.name ? { ...u, name: newName } : u));
+    }
+  };
+
+  const handleSuspend = (userToSuspend) => {
+    if (confirm(`Are you sure you want to suspend ${userToSuspend.name}?`)) {
+      setUsers(users.map(u => u.name === userToSuspend.name ? { ...u, status: 'Suspended' } : u));
+    }
+  };
+
+  return (
+    <div className="glass p-8 rounded-3xl min-h-[500px]">
+      <div className="flex justify-between items-center mb-8 border-b border-gray-100 pb-6">
+        <div>
+           <h2 className="text-2xl font-black text-gray-900 flex items-center"><User className="w-6 h-6 mr-3 text-brand-green" /> Users & NGOs Directory</h2>
+           <p className="text-gray-500 text-sm mt-1">Manage global access control across all operational roles.</p>
+        </div>
+        <button 
+          onClick={handleInvite}
+          className="bg-brand-green text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow hover:bg-brand-darkGreen transition-colors">
+          + Invite Partner
+        </button>
       </div>
-      <button className="bg-brand-green text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow hover:bg-brand-darkGreen transition-colors">
-        + Invite Partner
-      </button>
-    </div>
-    
-    <div className="overflow-x-auto">
-      <table className="w-full text-left border-collapse">
-        <thead>
-          <tr className="border-b border-gray-200 text-xs text-gray-400 font-bold uppercase tracking-wider bg-gray-50/50">
-            <th className="py-4 px-6 rounded-tl-xl">Organization / Name</th>
-            <th className="py-4 px-6">Role Scope</th>
-            <th className="py-4 px-6">Status</th>
-            <th className="py-4 px-6 text-right rounded-tr-xl">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-100">
-          {[
-            { name: 'Hope Shelter', role: 'Acceptor', status: 'Active' },
-            { name: 'Star Banquet Hall', role: 'Donor', status: 'Active' },
-            { name: 'Data Analyst User_41', role: 'Analyst', status: 'Offline' },
-            { name: 'Downtown Orphanage', role: 'Acceptor', status: 'Pending Review' }
-          ].map((u, i) => (
-            <tr key={i} className="hover:bg-white/60 transition-colors">
-              <td className="py-4 px-6 font-bold text-gray-900">{u.name}</td>
-              <td className="py-4 px-6">
-                <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-md text-xs font-bold border border-gray-200">{u.role}</span>
-              </td>
-              <td className="py-4 px-6">
-                <span className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-widest font-black inline-block ${
-                  u.status === 'Active' ? 'bg-brand-lightGreen text-brand-darkGreen border border-brand-green/20' : 
-                  u.status === 'Offline' ? 'bg-gray-200 text-gray-600 border border-gray-300' : 'bg-brand-lightOrange text-brand-darkOrange border border-brand-orange/20'
-                }`}>{u.status}</span>
-              </td>
-              <td className="py-4 px-6 text-right space-x-4">
-                <button onClick={() => alert('Editing interface locked for demo.')} className="text-blue-500 hover:text-blue-700 font-bold text-sm">Edit</button>
-                <button onClick={() => alert(`User account ${u.name} has been suspended!`)} className="text-red-500 hover:text-red-700 font-bold text-sm">Suspend</button>
-              </td>
+      
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b border-gray-200 text-xs text-gray-400 font-bold uppercase tracking-wider bg-gray-50/50">
+              <th className="py-4 px-6 rounded-tl-xl">Organization / Name</th>
+              <th className="py-4 px-6">Role Scope</th>
+              <th className="py-4 px-6">Status</th>
+              <th className="py-4 px-6 text-right rounded-tr-xl">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {users.map((u, i) => (
+              <tr key={i} className="hover:bg-white/60 transition-colors">
+                <td className="py-4 px-6 font-bold text-gray-900">{u.name}</td>
+                <td className="py-4 px-6">
+                  <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-md text-xs font-bold border border-gray-200">{u.role}</span>
+                </td>
+                <td className="py-4 px-6">
+                  <span className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-widest font-black inline-block ${
+                    u.status === 'Active' ? 'bg-brand-lightGreen text-brand-darkGreen border border-brand-green/20' : 
+                    u.status === 'Offline' ? 'bg-gray-200 text-gray-600 border border-gray-300' :
+                    u.status === 'Suspended' ? 'bg-red-100 text-red-600 border border-red-200' :
+                    'bg-brand-lightOrange text-brand-darkOrange border border-brand-orange/20'
+                  }`}>{u.status}</span>
+                </td>
+                <td className="py-4 px-6 text-right space-x-4">
+                  <button onClick={() => handleEdit(u)} className="text-blue-500 hover:text-blue-700 font-bold text-sm">Edit</button>
+                  <button onClick={() => handleSuspend(u)} className="text-red-500 hover:text-red-700 font-bold text-sm">Suspend</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const SettingsPanel = () => {
   const [aiEnabled, setAiEnabled] = useState(true);
