@@ -33,7 +33,7 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const res = await fetch('${import.meta.env.VITE_API_URL}/api/dashboard/stats', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, name, role, action: authMode })
@@ -55,7 +55,7 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const res = await fetch('${import.meta.env.VITE_API_URL}/api/dashboard/stats', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp: otpValue })
